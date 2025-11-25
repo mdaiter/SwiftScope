@@ -1,0 +1,5 @@
+[target.wasm32-wasip1]
+rustflags = [
+    "-L",
+    "/Users/msd/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/wasm32-wasip1/lib"
+]

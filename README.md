@@ -14,8 +14,8 @@ piece quickly.
 1. Build and test everything locally:
 
    ```bash
-   cargo test
-   cargo build
+   cargo test --features cli
+   cargo build --features cli --bin ios-lldb-dap
    ```
 
 2. The unit tests exercise symbol parsing, backend stack traces, and a small fake DAP
@@ -34,7 +34,7 @@ piece quickly.
 2. Build the adapter:
 
    ```bash
-   cargo build --bin ios-lldb-dap
+   cargo build --features cli --bin ios-lldb-dap
    ```
 
 3. Create a `debug.json` (see `debug.host.json` in this repo) that points to a host
@@ -139,14 +139,14 @@ the error and continues queuing packets so you can retry once the transport is r
 1. Build and install:
 
    ```bash
-   cargo build --bin ios-lldb-dap
+   cargo build --features cli --bin ios-lldb-dap
    zed extension install --path .
    ```
 
 2. Generate a configuration:
 
    ```bash
-   cargo run --bin ios-lldb-gendebug -- --program /absolute/path/to/binary --port 0 --write
+   cargo run --features cli --bin ios-lldb-gendebug -- --program /absolute/path/to/binary --port 0 --write
    ```
 
 3. Open Zed and pick the `"ios-lldb"` entry from `.zed/debug.json`.
@@ -157,7 +157,7 @@ the error and continues queuing packets so you can retry once the transport is r
 2. Generate a configuration and keep the helper alive:
 
    ```bash
-   cargo run --bin ios-lldb-setup -- --mode sim --project /path/to/YourApp.xcodeproj --scheme YourApp --write --wait
+   cargo run --features cli --bin ios-lldb-setup -- --mode sim --project /path/to/YourApp.xcodeproj --scheme YourApp --write --wait
    ```
 
 3. Start debugging from Zed using the generated entry.
@@ -168,7 +168,7 @@ the error and continues queuing packets so you can retry once the transport is r
 2. Run:
 
    ```bash
-   cargo run --bin ios-lldb-setup -- --mode device --project /path/to/YourApp.xcodeproj --scheme YourApp --write --wait
+   cargo run --features cli --bin ios-lldb-setup -- --mode device --project /path/to/YourApp.xcodeproj --scheme YourApp --write --wait
    ```
 
    The helper spawns iproxy, forwards the remote port, and writes the configuration.
