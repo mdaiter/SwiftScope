@@ -182,3 +182,36 @@ the error and continues queuing packets so you can retry once the transport is r
   by the Zed extension (see `src/lib.rs`).
 * Neither the Zed core repository nor the Luxmentis tooling is modified – this project
   remains an external adapter/extension.
+
+### DWARF requirements
+
+Breakpoints rely on DWARF line tables. Build your targets with the Debug
+configuration (or pass `-g` / `SWIFT_OPTIMIZATION_LEVEL=-Onone`) so the binary or
+its `.dSYM` contains DWARF. When `ios_llm_api` starts it checks the provided Mach-O
+for DWARF information and logs a warning like
+`DWARF line info missing for /path/to/MyApp`. Rebuild in Debug mode (or run
+`xcodebuild -configuration Debug`) before retrying, or pass `--require-dwarf` to
+make the shim exit immediately if the data is missing.
+
+### LLM HTTP controls
+
+`ios_llm_api` exposes the `/command` endpoint documented in
+`docs/claude_tool.md`. In addition to stack traces, locals, and breakpoints you
+can now:
+
+* `restart` / `launch` – restart the managed `ios-llm-devicectl` bridge and
+  reconnect to debugserver (requires running `ios_llm_api` with
+  `--manage-bridge --device --bundle-id`).
+* `watch_expr` and `evaluate_swift` – persist and re-evaluate watch expressions.
+* `select_thread` – change the active thread before inspecting locals/watches.
+* `build` – run the build hook configured via `--build-cmd ...` (repeat the flag
+  to pass multiple arguments, for example
+  `--build-cmd cargo --build-cmd run --build-cmd --features --build-cmd cli --build-cmd --bin --build-cmd ios-lldb-setup --build-cmd -- --mode sim`).
+
+Enable device log streaming with `--enable-log-stream`; the SSE endpoint lives
+at `http://127.0.0.1:<port>/logs`. The `/health` endpoint returns the current
+configuration, which `make autonomy` now uses as a readiness probe.
+
+See `docs/claude_autonomy_prompt.md` for a Claude-ready system prompt and a
+runnable example that covers pairing, building, launching the bridge, starting
+the HTTP shim, and issuing debugger commands.

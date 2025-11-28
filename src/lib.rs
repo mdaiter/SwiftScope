@@ -1,3 +1,8 @@
+pub mod backend;
+pub mod debug_session;
+pub mod gdb_remote;
+pub mod symbols;
+
 use serde_json::{json, Value};
 use zed_extension_api::{
     register_extension, DebugAdapterBinary, DebugConfig, DebugRequest, DebugScenario,
@@ -6,7 +11,7 @@ use zed_extension_api::{
 };
 
 const ADAPTER_NAME: &str = "ios-lldb";
-const CONFIG_ENV_VAR: &str = "IOS_LLDB_DAP_CONFIG";
+pub const CONFIG_ENV_VAR: &str = "IOS_LLDB_DAP_CONFIG";
 
 pub struct IosLldbExtension;
 
@@ -152,7 +157,17 @@ trait WorktreeLike {
 
 impl WorktreeLike for Worktree {
     fn which(&self, binary_name: &str) -> Option<String> {
-        Worktree::which(self, binary_name)
+        Worktree::which(self, binary_name).or_else(|| {
+            Worktree::shell_env(self)
+                .into_iter()
+                .find_map(|(key, value)| {
+                    if key == "IOS_LLDB_DAP_PATH" {
+                        Some(value)
+                    } else {
+                        None
+                    }
+                })
+        })
     }
 
     fn shell_env(&self) -> EnvVars {

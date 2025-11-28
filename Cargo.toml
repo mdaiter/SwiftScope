@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-cli = ["clap", "env_logger", "dunce", "dirs"]
+cli = ["axum", "clap", "dirs", "dunce", "env_logger", "tokio"]
 
 [dependencies]
 addr2line = { version = "0.25", features = ["loader"] }
@@ -16,9 +16,12 @@ anyhow = "1"
 gimli = "0.31"
 log = "0.4"
 object = "0.36"
+axum = { version = "0.7", optional = true }
+futures-core = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1"
+tokio = { version = "1", features = ["io-util", "macros", "process", "rt-multi-thread", "signal"], optional = true }
 zed_extension_api = { version = "0.7.0", default-features = false }
 
 [dependencies.clap]
@@ -51,4 +54,14 @@ required-features = ["cli"]
 [[bin]]
 name = "ios-lldb-setup"
 path = "src/bin/ios-lldb-setup.rs"
+required-features = ["cli"]
+
+[[bin]]
+name = "ios-llm-api"
+path = "src/bin/ios_llm_api.rs"
+required-features = ["cli"]
+
+[[bin]]
+name = "ios-llm-devicectl"
+path = "src/bin/ios-llm-devicectl.rs"
 required-features = ["cli"]

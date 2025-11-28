@@ -108,7 +108,7 @@ impl SymbolContext {
         Ok(frames)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "cli"))]
     pub fn for_testing(main: Image) -> Self {
         Self { main }
     }

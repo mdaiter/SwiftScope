@@ -1,17 +1,10 @@
-mod backend;
-mod gdb_remote;
-mod symbols;
-
-use backend::{Backend, BackendStopEvent};
+use ios_lldb_dap::{
+    backend::{Backend, BackendStopEvent},
+    debug_session::init_backend,
+};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::{
-    env,
-    io::{self, BufRead, BufReader, BufWriter, Write},
-    path::{Path, PathBuf},
-};
-
-const CONFIG_ENV_VAR: &str = "IOS_LLDB_DAP_CONFIG";
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
 
 fn main() -> io::Result<()> {
     let _ = env_logger::builder().format_timestamp(None).try_init();
@@ -538,34 +531,11 @@ fn parse_arguments<T: DeserializeOwned>(value: Value) -> Result<T, String> {
     serde_json::from_value(value).map_err(|err| err.to_string())
 }
 
-fn init_backend() -> io::Result<Backend> {
-    if let Ok(raw) = env::var(CONFIG_ENV_VAR) {
-        if let Some(program) = parse_program_from_config(&raw)? {
-            return backend_from_program(&program);
-        }
-    }
-    let exe = env::current_exe()?;
-    backend_from_program(&exe)
-}
-
-fn backend_from_program(program: &Path) -> io::Result<Backend> {
-    Backend::new_from_app(program).map_err(|err| io::Error::new(io::ErrorKind::Other, err))
-}
-
-fn parse_program_from_config(raw: &str) -> io::Result<Option<PathBuf>> {
-    let value: Value =
-        serde_json::from_str(raw).map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
-    Ok(value
-        .get("program")
-        .and_then(Value::as_str)
-        .map(PathBuf::from))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::symbols::{Image, SymbolContext};
     use addr2line::Loader;
+    use ios_lldb_dap::symbols::{Image, SymbolContext};
 
     #[derive(Serialize)]
     struct DummyResponse<'a> {

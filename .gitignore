@@ -4,3 +4,6 @@ target/
 *.dSYM/
 /ios-lldb-dap.log
 .env
+.zed/ios-llm-state.json
+ios_llm_api.log
+bridge.log

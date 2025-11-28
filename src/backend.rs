@@ -260,6 +260,10 @@ impl Backend {
             .as_mut()
             .ok_or_else(|| "no gdb-remote connection; call connect_debugserver first".to_string())
     }
+
+    pub fn program_path(&self) -> &Path {
+        &self.symbol_ctx.main.path
+    }
 }
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone)]
@@ -425,6 +429,38 @@ impl LineIndex {
                 self.map.entry(key).or_default().push(range);
             }
         }
+    }
+}
+
+pub fn binary_has_dwarf_line_info(path: &Path) -> bool {
+    match fs::read(path) {
+        Ok(data) => match object::File::parse(&*data) {
+            Ok(file) => {
+                let endian = if file.is_little_endian() {
+                    RunTimeEndian::Little
+                } else {
+                    RunTimeEndian::Big
+                };
+                match gimli::DwarfSections::load(|id| load_section_vec(&file, id)) {
+                    Ok(sections) => {
+                        let dwarf =
+                            sections.borrow(|section| gimli::EndianSlice::new(section, endian));
+                        let mut units = dwarf.units();
+                        while let Ok(Some(header)) = units.next() {
+                            if let Ok(unit) = dwarf.unit(header) {
+                                if unit.line_program.is_some() {
+                                    return true;
+                                }
+                            }
+                        }
+                        false
+                    }
+                    Err(_) => false,
+                }
+            }
+            Err(_) => false,
+        },
+        Err(_) => false,
     }
 }
 
@@ -609,6 +645,19 @@ mod tests {
             }
             Err(err) => eprintln!("skipping line_index_builds_from_current_binary: {err}"),
         }
+    }
+
+    #[test]
+    fn detects_dwarf_in_current_binary() {
+        let exe = std::env::current_exe().unwrap();
+        if !binary_has_dwarf_line_info(&exe) {
+            eprintln!(
+                "current binary appears to be missing DWARF; skipping assertion for {}",
+                exe.display()
+            );
+            return;
+        }
+        assert!(binary_has_dwarf_line_info(&exe));
     }
 
     fn test_backend() -> Backend {
