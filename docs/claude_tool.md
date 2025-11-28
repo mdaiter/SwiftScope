@@ -1,27 +1,72 @@
-# CLAUDE_TOOL.md – /command Schema & Usage
+# CLAUDE_TOOL.md – ios_debug_command Reference
 
 **[USER CONFIGURATION REQUIRED]**
 
-This file documents the single `ios_debug_command` tool exposed by
-`ios_llm_api`. Claude references it whenever issuing debugger commands so it
-knows the schema, expected responses, and troubleshooting steps.
+This document mirrors the style of `claude_agents/DEBUGGING.md` and teaches the
+agent exactly how to call the lone tool exposed by `ios_llm_api`.
 
 ---
 
-## 📋 Log Format & Patterns
+## 🧰 Tool Overview
 
+**Purpose**: Bridge Claude and the running debug session via HTTP.
+
+**Endpoints**:
+- `POST http://127.0.0.1:<port>/command` – main control surface.
+- `GET /health` – readiness check (use before calling commands).
+- `GET /logs` – SSE feed (diagnostics).
+
+**Success Envelope**:
 ```
-Command Payload:
-{ "action": "<name>", ...args }
-
-Success Response:
 { "ok": true, ...payload }
-
-Failure Response:
-{ "ok": false, "error": "<message>" }
-
-All commands are POSTed to http://127.0.0.1:<port>/command with JSON bodies.
 ```
+**Failure Envelope**:
+```
+{ "ok": false, "error": "Human-readable explanation" }
+```
+
+---
+
+## 🧾 Input Schema
+
+```
+{
+  "action": "<enum>",
+  "file": "<string>",          // set_breakpoint only
+  "line": <int>,               // set_breakpoint only
+  "expression": "<string>",    // evaluate, evaluate_swift, watch_expr
+  "variablesReference": <int>, // variables action
+  "threadId": <int>            // select_thread action
+}
+```
+
+**Supported Actions**
+
+| Category | Actions |
+|----------|---------|
+| Inspection | `stacktrace`, `threads`, `locals`, `scopes`, `variables` |
+| Control | `continue`, `next`, `step_in`, `disconnect` |
+| Breakpoints | `set_breakpoint` (requires `file`, `line`) |
+| Evaluation | `evaluate`, `evaluate_swift`, `watch_expr` |
+| Session Mgmt | `restart`, `launch`, `select_thread`, `build` |
+
+> `restart`/`launch` require `ios_llm_api --manage-bridge`.  
+> `build` requires a `--build-cmd` to have been registered on startup.
+
+---
+
+## 📤 Response Contracts
+
+| Action | Payload |
+|--------|---------|
+| `stacktrace` | `{ "ok": true, "stacktrace": [Frame...] }` |
+| `threads` | `{ "ok": true, "threads": [...] }` |
+| `set_breakpoint` | `{ "ok": true, "breakpoint_id": <u32> }` |
+| `variables` | `{ "ok": true, "variables": [Variable...] }` |
+| `evaluate*` | `{ "ok": true, "result": "<value>", "type": "<ty>" }` |
+| `watch_expr` | `{ "ok": true, "watch": [{ expression, result }] }` |
+| `select_thread` | `{ "ok": true, "threadId": <i64> }` |
+| `build` | `{ "ok": <bool>, "exitCode": <int>, "stdout": "...", "stderr": "..." }` |
 
 ---
 
@@ -29,16 +74,16 @@ All commands are POSTed to http://127.0.0.1:<port>/command with JSON bodies.
 
 ```
 ERROR: "expression `<expr>` is not supported"
-Cause: evaluate/watch called with unknown variable.
-Fix: Inspect locals (`locals` command) or use `evaluate_swift`.
+Cause: Expression not found among locals.
+Fix: Inspect locals first or use evaluate_swift.
 
 ERROR: "restart requires --manage-bridge"
-Cause: ios_llm_api not launched with --manage-bridge.
-Fix: Restart shim with that flag or avoid restart/launch commands.
+Cause: Shim was launched without --manage-bridge.
+Fix: Relaunch via `make autonomy` or avoid restart/launch calls.
 
 ERROR: "build command not configured"
-Cause: No --build-cmd provided.
-Fix: Start ios_llm_api with `--build-cmd <script>` or skip build requests.
+Cause: No --build-cmd supplied.
+Fix: Start ios_llm_api with `--build-cmd <script>`.
 ```
 
 ---
@@ -46,104 +91,34 @@ Fix: Start ios_llm_api with `--build-cmd <script>` or skip build requests.
 ## 🔎 Diagnostic Procedures
 
 ```
-Issue: Tool call timed out / refused.
+Issue: Command hangs
 1. curl -sf http://127.0.0.1:4000/health
-2. If failing, relaunch ios_llm_api.
-3. Check /logs for backend errors.
+2. Inspect curl -Ns http://127.0.0.1:4000/logs
+3. If bridge died, invoke restart action (requires --manage-bridge)
 
-Issue: Breakpoint didn’t set.
-1. Confirm DWARF warning not logged.
-2. Ensure `file` path matches DWARF line paths.
-3. Use `watch_expr` to confirm symbol resolution.
+Issue: Breakpoint skipped
+1. Confirm logs lack "No DWARF ranges..."
+2. Verify file path matches DWARF (absolute path recommended)
+3. Use watch_expr to ensure symbols resolve
 ```
 
 ---
 
-## 🚨 Error Categories & Priority
+## 🧪 Sample Session
 
 ```
-Critical: { ok:false, error: "failed to connect to debugserver" }
-High: { ok:false, error: "build command not configured" }
-Medium: { ok:false, error: "expression ... is not supported" }
-Low: Informational messages (missing watch, duplicate breakpoint).
-```
-
----
-
-## 🔧 Debugging Tools & Techniques
-
-```
-Registered Tool:
-name: ios_debug_command
-description: Send debugger command to ios-LLDB HTTP bridge.
-
-Input Schema (action enum):
-- stacktrace, threads, continue, next, step_in
-- set_breakpoint (requires file + line)
-- locals, scopes, variables (optional variablesReference)
-- evaluate, evaluate_swift (requires expression)
-- watch_expr (requires expression; stores watch)
-- select_thread (requires threadId)
-- restart, launch (require --manage-bridge)
-- build (requires --build-cmd)
-- disconnect
-
-Python stub usage:
 python tools/claude_tool_stub.py --action stacktrace
 python tools/claude_tool_stub.py --action set_breakpoint --file ViewController.swift --line 42
 python tools/claude_tool_stub.py --action continue
+python tools/claude_tool_stub.py --action watch_expr --expression counter
+python tools/claude_tool_stub.py --action restart     # only if --manage-bridge
 ```
 
 ---
 
-## 📊 Performance Debugging
+## 📝 Maintenance Notes
 
-```
-Monitor latency: tool calls should complete < 1s.
-If requests stall:
- - Check bridge logs for network contention.
- - Ensure device is still connected.
-```
-
----
-
-## 🐛 Known Issues & Workarounds
-
-```
-Known: evaluate_swift currently mirrors evaluate.
-Workaround: Use locals/watch expressions for now.
-
-Known: restart/launch only work when ios_llm_api controls the bridge.
-Workaround: Run `make autonomy` (which sets --manage-bridge) or restart manually.
-```
-
----
-
-## 📈 Monitoring & Alerts
-
-```
-Expose metrics by counting `ok:false` responses.
-For automation: alert if >3 consecutive failures per action.
-Watch `/logs` for repeated restart/build failures.
-```
-
----
-
-## 🔄 Debugging Workflow
-
-```
-1. stacktrace – capture current frames.
-2. set_breakpoint – provide file + line.
-3. continue – resume execution.
-4. watch_expr / evaluate – inspect state when stopped.
-5. restart / launch – reattach if process exits.
-6. build – rebuild before repeating the loop.
-```
-
----
-
-## 📝 Configuration Guide
-
-1. Keep this schema in sync with `src/bin/ios_llm_api.rs`.
-2. Update when new actions are added or payloads change.
-3. Reference from CLAUDE.md so the agent always knows how to call the tool.
+1. Keep this schema synced with `src/bin/ios_llm_api.rs`.
+2. When adding new actions, document payloads here before exposing to Claude.
+3. Reference this file from your top-level `CLAUDE.md` so the orchestrator
+   always loads the latest tool contract.

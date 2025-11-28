@@ -212,6 +212,7 @@ Enable device log streaming with `--enable-log-stream`; the SSE endpoint lives
 at `http://127.0.0.1:<port>/logs`. The `/health` endpoint returns the current
 configuration, which `make autonomy` now uses as a readiness probe.
 
-See `docs/claude_autonomy_prompt.md` for a Claude-ready system prompt and a
+See `docs/CLAUDE_AUTONOMY.md` for a Claude-ready system prompt and a
 runnable example that covers pairing, building, launching the bridge, starting
-the HTTP shim, and issuing debugger commands.
+the HTTP shim, and issuing debugger commands. Tool contract details live in
+`docs/CLAUDE_TOOL.md`, and troubleshooting guidance is in `docs/DEBUGGING.md`.
