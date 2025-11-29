@@ -1,6 +1,6 @@
 PROJECT ?= /path/to/YourApp.xcodeproj
 SCHEME ?= YourApp
-PROGRAM ?= ./target/debug/ios-lldb-dap
+PROGRAM ?= ./target/debug/SwiftScope
 PORT ?= 0
 
 .PHONY: host-test

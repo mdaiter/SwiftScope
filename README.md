@@ -1,9 +1,9 @@
-# ios-lldb-dap
+# SwiftScope
 
 Rust-powered tooling for debugging Swift/iOS binaries anywhere—Zed, your shell,
 or Claude Code. This repo bundles:
 
-* **`ios-lldb-dap`** – a minimal Debug Adapter Protocol server. Any editor
+* **`SwiftScope`** – a minimal Debug Adapter Protocol server. Any editor
   (Zed, VS Code, Neovim, Helix, etc.) can point its DAP client at this binary.
 * **CLI helpers** – `ios-llm-devicectl` and `ios_llm_api` for pairing devices,
   launching `debugserver`, and driving breakpoints completely from the terminal.
@@ -19,14 +19,14 @@ when stepping through Swift.
 
 ```bash
 cargo test --features cli                      # run unit + DAP harness tests
-cargo build --features cli --bin ios-lldb-dap  # build the adapter
+cargo build --features cli --bin swiftscope  # build the adapter
 
 # Optional: install the Zed extension
 zed extension install --path .
 ```
 
 You can now debug any macOS binary by pointing your editor’s DAP config at the
-`ios-lldb-dap` binary and supplying `program`, `cwd`, and (optionally) a
+`SwiftScope` binary and supplying `program`, `cwd`, and (optionally) a
 `debugserverPort` if you’re attaching.
 
 ---
@@ -100,7 +100,7 @@ with DAP support works. For Zed:
    `cargo run --features cli --bin ios-lldb-gendebug -- --program /absolute/path --port 0 --write`
 3. Pick the `ios-lldb` profile inside Zed.
 
-Other editors just need a DAP config pointing to the `ios-lldb-dap` binary and
+Other editors just need a DAP config pointing to the `SwiftScope` binary and
 the same arguments.
 
 ---

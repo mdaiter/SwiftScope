@@ -1,5 +1,5 @@
 [package]
-name = "ios-lldb-dap"
+name = "swiftscope"
 version = "0.1.0"
 edition = "2021"
 
@@ -42,7 +42,7 @@ version = "5.0"
 optional = true
 
 [[bin]]
-name = "ios-lldb-dap"
+name = "swiftscope"
 path = "src/main.rs"
 required-features = ["cli"]
 

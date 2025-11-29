@@ -8,7 +8,7 @@ repository = "https://example.com/ios-lldb"
 
 [debug_adapters.ios-lldb]
 transport = "stdio"
-command = "ios-lldb-dap"
+command = "swiftscope"
 
 [[debug_adapter_schemas]]
 name = "ios-lldb"

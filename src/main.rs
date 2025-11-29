@@ -1,4 +1,4 @@
-use ios_lldb_dap::{
+use swiftscope::{
     backend::{Backend, BackendStopEvent},
     debug_session::init_backend,
 };
@@ -535,7 +535,7 @@ fn parse_arguments<T: DeserializeOwned>(value: Value) -> Result<T, String> {
 mod tests {
     use super::*;
     use addr2line::Loader;
-    use ios_lldb_dap::symbols::{Image, SymbolContext};
+    use swiftscope::symbols::{Image, SymbolContext};
 
     #[derive(Serialize)]
     struct DummyResponse<'a> {

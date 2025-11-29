@@ -25,7 +25,7 @@ use axum::{
 };
 use clap::Parser;
 use futures_core::Stream;
-use ios_lldb_dap::{
+use swiftscope::{
     backend,
     debug_session::{self, DebugSession, DebugSessionError},
 };
@@ -333,7 +333,7 @@ async fn handle_launch_request(state: &AppState, restart: bool) -> anyhow::Resul
     let mut session = state.session.lock().await;
     session
         .connect_debugserver(state.config.debugserver_port)
-        .map_err(|err| anyhow::anyhow!(err))?;
+        .map_err(|err: DebugSessionError| anyhow::anyhow!(err))?;
     Ok(json!({ "ok": true }))
 }
 

@@ -698,28 +698,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ios-lldb-dap"
-version = "0.1.0"
-dependencies = [
- "addr2line",
- "anyhow",
- "axum",
- "clap",
- "dirs",
- "dunce",
- "env_logger",
- "futures-core",
- "gimli 0.31.1",
- "log",
- "object 0.36.7",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "zed_extension_api",
-]
-
-[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1162,6 +1140,28 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "swiftscope"
+version = "0.1.0"
+dependencies = [
+ "addr2line",
+ "anyhow",
+ "axum",
+ "clap",
+ "dirs",
+ "dunce",
+ "env_logger",
+ "futures-core",
+ "gimli 0.31.1",
+ "log",
+ "object 0.36.7",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "zed_extension_api",
+]
 
 [[package]]
 name = "syn"

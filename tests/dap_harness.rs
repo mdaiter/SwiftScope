@@ -8,10 +8,10 @@ use serde_json::json;
 
 #[test]
 fn dap_harness_produces_stack_trace() {
-    let bin = match env::var("CARGO_BIN_EXE_ios-lldb-dap") {
+    let bin = match env::var("CARGO_BIN_EXE_swiftscope") {
         Ok(path) => path,
         Err(_) => {
-            eprintln!("CARGO_BIN_EXE_ios-lldb-dap missing; skipping harness test");
+            eprintln!("CARGO_BIN_EXE_swiftscope missing; skipping harness test");
             return;
         }
     };
@@ -33,7 +33,7 @@ fn dap_harness_produces_stack_trace() {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("spawn ios-lldb-dap");
+        .expect("spawn swiftscope");
 
     {
         let mut stdin = child.stdin.take().expect("child stdin");

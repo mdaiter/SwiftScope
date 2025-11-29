@@ -204,7 +204,7 @@ mod tests {
     fn get_dap_binary_prefers_user_path() {
         let config = sample_task_definition();
         let mut worktree = FakeWorktree::new();
-        worktree.set_binary_path("/usr/bin/ios-lldb-dap");
+        worktree.set_binary_path("/usr/bin/SwiftScope");
         let binary =
             build_debug_adapter_binary(&config, Some("/custom/dap".into()), &worktree).unwrap();
         assert_eq!(binary.command.as_deref(), Some("/custom/dap"));
@@ -218,11 +218,11 @@ mod tests {
     fn get_dap_binary_uses_worktree_path_when_not_overridden() {
         let config = sample_task_definition();
         let mut worktree = FakeWorktree::new();
-        worktree.set_binary_path("/usr/local/bin/ios-lldb-dap");
+        worktree.set_binary_path("/usr/local/bin/SwiftScope");
         let binary = build_debug_adapter_binary(&config, None, &worktree).unwrap();
         assert_eq!(
             binary.command.as_deref(),
-            Some("/usr/local/bin/ios-lldb-dap")
+            Some("/usr/local/bin/SwiftScope")
         );
     }
 
